@@ -39,34 +39,25 @@ jobs:
       - name: Run tests
         run: flutter test --reporter expanded
 
+  prepare-build:
+    name: Prepare build matrix
+    runs-on: ubuntu-latest
+    outputs:
+      matrix: ${{ steps.set-matrix.outputs.matrix }}
+    steps:
+      - id: set-matrix
+        run: |
+          if [ "${{ github.repository }}" = "chen08209/FlClash" ]; then
+            echo 'matrix={"include":[{"platform":"android","os":"ubuntu-latest"},{"platform":"windows","os":"Windows-2022","arch":"amd64"},{"platform":"linux","os":"ubuntu-22.04","arch":"amd64"},{"platform":"macos","os":"macos-15-intel","arch":"amd64"},{"platform":"macos","os":"macos-latest","arch":"arm64"},{"platform":"windows","os":"windows-11-arm","arch":"arm64"},{"platform":"linux","os":"ubuntu-24.04-arm","arch":"arm64"}]}' >> "$GITHUB_OUTPUT"
+          else
+            echo 'matrix={"include":[{"platform":"windows","os":"Windows-2022","arch":"amd64"},{"platform":"linux","os":"ubuntu-22.04","arch":"amd64"},{"platform":"macos","os":"macos-15-intel","arch":"amd64"},{"platform":"macos","os":"macos-latest","arch":"arm64"},{"platform":"windows","os":"windows-11-arm","arch":"arm64"},{"platform":"linux","os":"ubuntu-24.04-arm","arch":"arm64"}]}' >> "$GITHUB_OUTPUT"
+          fi
+
   build:
-    needs: [ test ]
-    # Fork 无 Android 签名 Secret 时跳过 Android 矩阵
-    if: ${{ matrix.platform != 'android' || github.repository == 'chen08209/FlClash' }}
+    needs: [ test, prepare-build ]
     runs-on: ${{ matrix.os }}
     strategy:
-      matrix:
-        include:
-          - platform: android
-            os: ubuntu-latest
-          - platform: windows
-            os: Windows-2022
-            arch: amd64
-          - platform: linux
-            os: ubuntu-22.04
-            arch: amd64
-          - platform: macos
-            os: macos-15-intel
-            arch: amd64
-          - platform: macos
-            os: macos-latest
-            arch: arm64
-          - platform: windows
-            os: windows-11-arm
-            arch: arm64
-          - platform: linux
-            os: ubuntu-24.04-arm
-            arch: arm64
+      matrix: ${{ fromJSON(needs.prepare-build.outputs.matrix) }}
 
     steps:
       - name: Setup rust
@@ -141,7 +132,7 @@ jobs:
           overwrite: true
 
   changelog:
-    if: ${{ env.IS_STABLE == 'true' && github.repository == 'chen08209/FlClash' }}
+    if: ${{ !contains(github.ref, '-') && github.repository == 'chen08209/FlClash' }}
     runs-on: ubuntu-latest
     needs: [ build ]
     steps:
