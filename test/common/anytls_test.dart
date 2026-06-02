@@ -22,8 +22,9 @@ void main() {
 
       relaxAnytlsTlsVerify(config);
 
-      final anytls = (config['proxies'] as List).first as Map;
-      final vmess = (config['proxies'] as List)[1] as Map;
+      final proxies = config['proxies']! as List;
+      final anytls = proxies.first as Map<String, dynamic>;
+      final vmess = proxies[1] as Map<String, dynamic>;
 
       expect(anytls.containsKey('fingerprint'), isFalse);
       expect(anytls['skip-cert-verify'], isTrue);

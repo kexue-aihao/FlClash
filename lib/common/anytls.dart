@@ -2,7 +2,7 @@
 ///
 /// v2rayN (sing-box) ignores URI `pcs` on AnyTLS, while Mihomo enforces YAML
 /// `fingerprint`. Wrong panel pins break FlClash but not v2rayN.
-void relaxAnytlsTlsVerify(Map<String, dynamic> rawConfig) {
+void relaxAnytlsTlsVerify(Map rawConfig) {
   final proxies = rawConfig['proxies'];
   if (proxies is! List) {
     return;
