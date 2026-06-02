@@ -47,11 +47,7 @@ jobs:
     steps:
       - id: set-matrix
         run: |
-          if [ "${{ github.repository }}" = "chen08209/FlClash" ]; then
-            echo 'matrix={"include":[{"platform":"android","os":"ubuntu-latest"},{"platform":"windows","os":"Windows-2022","arch":"amd64"},{"platform":"linux","os":"ubuntu-22.04","arch":"amd64"},{"platform":"macos","os":"macos-15-intel","arch":"amd64"},{"platform":"macos","os":"macos-latest","arch":"arm64"},{"platform":"windows","os":"windows-11-arm","arch":"arm64"},{"platform":"linux","os":"ubuntu-24.04-arm","arch":"arm64"}]}' >> "$GITHUB_OUTPUT"
-          else
-            echo 'matrix={"include":[{"platform":"windows","os":"Windows-2022","arch":"amd64"},{"platform":"linux","os":"ubuntu-22.04","arch":"amd64"},{"platform":"macos","os":"macos-15-intel","arch":"amd64"},{"platform":"macos","os":"macos-latest","arch":"arm64"},{"platform":"windows","os":"windows-11-arm","arch":"arm64"},{"platform":"linux","os":"ubuntu-24.04-arm","arch":"arm64"}]}' >> "$GITHUB_OUTPUT"
-          fi
+          echo 'matrix={"include":[{"platform":"android","os":"ubuntu-latest"},{"platform":"windows","os":"Windows-2022","arch":"amd64"},{"platform":"linux","os":"ubuntu-22.04","arch":"amd64"},{"platform":"macos","os":"macos-15-intel","arch":"amd64"},{"platform":"macos","os":"macos-latest","arch":"arm64"},{"platform":"windows","os":"windows-11-arm","arch":"arm64"},{"platform":"linux","os":"ubuntu-24.04-arm","arch":"arm64"}]}' >> "$GITHUB_OUTPUT"
 
   build:
     needs: [ test, prepare-build ]
@@ -76,11 +72,25 @@ jobs:
       - name: Setup Android Signing
         if: startsWith(matrix.platform,'android')
         run: |
-          echo "${{ secrets.KEYSTORE }}" | base64 --decode > android/app/keystore.jks
-          echo "${{ secrets.SERVICE_JSON }}" | base64 --decode > android/app/google-services.json
-          echo "keyAlias=${{ secrets.KEY_ALIAS }}" >> android/local.properties
-          echo "storePassword=${{ secrets.STORE_PASSWORD }}" >> android/local.properties
-          echo "keyPassword=${{ secrets.KEY_PASSWORD }}" >> android/local.properties
+          if [ -n "${{ secrets.KEYSTORE }}" ]; then
+            echo "${{ secrets.KEYSTORE }}" | base64 --decode > android/app/keystore.jks
+            echo "keyAlias=${{ secrets.KEY_ALIAS }}" >> android/local.properties
+            echo "storePassword=${{ secrets.STORE_PASSWORD }}" >> android/local.properties
+            echo "keyPassword=${{ secrets.KEY_PASSWORD }}" >> android/local.properties
+          else
+            keytool -genkeypair -v \
+              -keystore android/app/keystore.jks \
+              -alias flclash-ci \
+              -keyalg RSA -keysize 2048 -validity 10000 \
+              -storepass flclash-ci -keypass flclash-ci \
+              -dname "CN=FlClash CI, OU=CI, O=FlClash, L=NA, ST=NA, C=US"
+            echo "keyAlias=flclash-ci" >> android/local.properties
+            echo "storePassword=flclash-ci" >> android/local.properties
+            echo "keyPassword=flclash-ci" >> android/local.properties
+          fi
+          if [ -n "${{ secrets.SERVICE_JSON }}" ]; then
+            echo "${{ secrets.SERVICE_JSON }}" | base64 --decode > android/app/google-services.json
+          fi
 
       - name: Setup Go
         uses: actions/setup-go@v5
