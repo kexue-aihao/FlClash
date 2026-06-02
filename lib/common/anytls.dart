@@ -8,7 +8,8 @@ void relaxAnytlsTlsVerify(Map rawConfig) {
     return;
   }
 
-  for (final proxy in proxies) {
+  for (var i = 0; i < proxies.length; i++) {
+    final proxy = proxies[i];
     if (proxy is! Map) {
       continue;
     }
@@ -16,7 +17,9 @@ void relaxAnytlsTlsVerify(Map rawConfig) {
     if (type is! String || type.toLowerCase() != 'anytls') {
       continue;
     }
-    proxy.remove('fingerprint');
-    proxy['skip-cert-verify'] = true;
+    final relaxed = Map<String, dynamic>.from(proxy);
+    relaxed.remove('fingerprint');
+    relaxed['skip-cert-verify'] = true;
+    proxies[i] = relaxed;
   }
 }

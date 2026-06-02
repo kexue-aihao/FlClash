@@ -6,13 +6,13 @@ void main() {
     test('strips fingerprint and enables skip-cert-verify for anytls', () {
       final config = <String, dynamic>{
         'proxies': [
-          {
+          <String, dynamic>{
             'name': 'hk1',
             'type': 'anytls',
             'server': 'example.com',
             'fingerprint': 'deadbeef',
           },
-          {
+          <String, dynamic>{
             'name': 'vmess1',
             'type': 'vmess',
             'fingerprint': 'keep-me',
